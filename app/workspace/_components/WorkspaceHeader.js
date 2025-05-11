@@ -8,7 +8,7 @@ import React, { useContext } from 'react'
 function WorkspaceHeader({fileName}) {
   const {fileSave,setFileSave}=useContext(FileSaveContext);
   return (
-    <div className='p-4 flex justify-between shadow-md'>
+    <div className='px-4 h-16 flex justify-between items-center shadow-md'>
       <Link href={'/dashboard'}>
         <Image src={'/logo.svg'} alt='logo' width={140} height={100}/>
         </Link>
