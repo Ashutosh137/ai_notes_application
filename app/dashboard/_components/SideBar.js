@@ -1,15 +1,15 @@
 "use client";
-import { Button } from "../../../components/ui/button";
-import { Progress } from "../../../components/ui/progress";
-import { Layout, Shield } from "lucide-react";
-import Image from "next/image";
-import React from "react";
-import UploadPdfDialog from "./UploadPdfDialog";
-import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Button } from '../../../components/ui/button'
+import { Progress } from '../../../components/ui/progress'
+import { Layout, Shield } from 'lucide-react'
+import Image from 'next/image'
+import React from 'react'
+import UploadPdfDialog from './UploadPdfDialog'
+import { useUser } from '@clerk/nextjs'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
+import { usePathname } from 'next/navigation'
+import Link from 'next/link'
 
 function SideBar() {
   const { user } = useUser();

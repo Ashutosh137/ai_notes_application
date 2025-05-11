@@ -4,7 +4,7 @@ import React, { useEffect } from "react";
 import WorkspaceHeader from "../_components/WorkspaceHeader";
 import PdfViewer from "../_components/PdfViewer";
 import { useQueries, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import TextEditior from "../_components/TextEditior";
 
 function Workspace() {

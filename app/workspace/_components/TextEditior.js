@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import Highlight from "@tiptap/extension-highlight";
 import TextAlign from "@tiptap/extension-text-align";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 import EditorExtension from "./EditiorExtension";
 function TextEditor({ fileId }) {

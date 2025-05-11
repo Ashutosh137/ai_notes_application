@@ -3,7 +3,7 @@ import "./globals.css";
 import {Outfit} from "next/font/google"
 import Provider from "./provider";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Toaster } from "@/components/ui/sonner"
+import { Toaster } from "../components/ui/sonner"
 
 export const metadata = {
   title: "Create Next App",

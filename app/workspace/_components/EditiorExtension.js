@@ -1,6 +1,6 @@
 "use client";
-import { chatSession } from "@/configs/AIModel";
-import { api } from "@/convex/_generated/api";
+import { chatSession } from "../../../configs/AIModel";
+import { api } from "../../../convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
 import { useAction, useMutation } from "convex/react";
 import {
@@ -27,7 +27,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { saveAs } from "file-saver";
 import htmlDocx from "html-docx-js/dist/html-docx";
-import { FileSaveContext } from "@/app/_context/FileSaveContext";
+import { FileSaveContext } from "../../../app/_context/FileSaveContext";
 
 function EditorExtension({ editor }) {
   const { fileId } = useParams();
