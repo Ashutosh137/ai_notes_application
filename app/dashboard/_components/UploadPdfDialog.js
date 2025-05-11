@@ -9,9 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+} from "../../../components/ui/dialog";
+import { Button } from "../../../components/ui/button";
 import { useAction, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Loader2Icon } from "lucide-react";
@@ -144,7 +143,8 @@ function UploadPdfDialog({ children, isMaxFile }) {
               </div>
               <div className="mt-2">
                 <label>File Name *</label>
-                <Input
+                <input
+                className="w-full p-2 border rounded-md"
                   placeholder="File Name"
                   onChange={(e) => setFileName(e.target.value)}
                 />
