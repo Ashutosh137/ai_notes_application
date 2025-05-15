@@ -91,6 +91,11 @@ Answer content: ${AllUnformattedAns}
       console.error(error);
     }
   };
+   function stripHTML(html) {
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return div.textContent || div.innerText || "";
+}
 
   const download = () => {
     const htmlString = `
@@ -156,6 +161,19 @@ Answer content: ${AllUnformattedAns}
         editor.commands.setContent(
           AllText + "<p><strong>Answer: </strong>" + FinalAns + "</p>"
         );
+        const text = stripHTML(await AiModelResult.response.text()); 
+ try {
+     await fetch('/api/text_to_speech', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body:JSON.stringify({ text: text }),
+});
+const audio = new Audio('/voice.mp3');
+audio.play();
+    } catch (err) {
+      console.error('Error:', err);}
 
         saveNotes({
           notes: editor.getHTML(),

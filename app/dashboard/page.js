@@ -39,7 +39,7 @@ function Dashboard() {
 
   return (
     <div className="px-4 md:px-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 w-full">
         <div>
           <h2 className="font-bold text-2xl md:text-3xl">My Workspace</h2>
           <p className="text-sm text-muted-foreground">

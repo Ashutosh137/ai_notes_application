@@ -10,7 +10,7 @@ function WorkspaceHeader({fileName}) {
   return (
     <div className='px-4 h-16 flex justify-between items-center shadow-md'>
       <Link href={'/dashboard'}>
-        <Image src={'/logo.svg'} alt='logo' width={140} height={100}/>
+        <Image src={'/logo.svg'} alt='logo' width={50} height={30}/>
         </Link>
         <h2 className='font-bold'>{fileName}</h2>
         <div className='flex gap-2 items-center'>

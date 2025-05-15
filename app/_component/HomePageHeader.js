@@ -16,7 +16,7 @@ function HomePageHeader() {
             />
             <div className="relative z-20 w-full flex justify-between lg:w-max md:px-0">
               {/* <a href="/dashboard" aria-label="logo" className="flex space-x-2 items-center"> */}
-              <Image src={"/logo.svg"} alt="logo" width={150} height={110} />
+              <Image src={"/logo.svg"} alt="logo" width={70} height={50} />
               {/* </a> */}
 
               <div className="relative flex items-center lg:hidden max-h-10">
