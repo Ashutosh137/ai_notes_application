@@ -21,13 +21,16 @@ import {
   Strikethrough,
   TextQuote,
   Underline,
+  Play,
+  Pause
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState,useRef } from "react";
 import { toast } from "sonner";
 import { saveAs } from "file-saver";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { FileSaveContext } from "../../../app/_context/FileSaveContext";
+
 
 function EditorExtension({ editor }) {
   const { fileId } = useParams();
@@ -36,6 +39,25 @@ function EditorExtension({ editor }) {
   const { user } = useUser();
   const { fileSave, setFileSave } = useContext(FileSaveContext);
   const [isListening, setIsListening] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+
+  const handlePlay = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(`/voice.mp3?ts=${Date.now()}`);
+      audioRef.current.onended = () => setIsPlaying(false); // Reset when audio ends
+    }
+    audioRef.current.play();
+    setIsPlaying(true);
+  };
+
+  const handlePause = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+  }
+
 
   const onAiClick = async () => {
     toast("AI is getting your answer...");
@@ -91,7 +113,7 @@ Answer content: ${AllUnformattedAns}
       console.error(error);
     }
   };
-   function stripHTML(html) {
+function stripHTML(html) {
   const div = document.createElement("div");
   div.innerHTML = html;
   return div.textContent || div.innerText || "";
@@ -150,8 +172,9 @@ Answer content: ${AllUnformattedAns}
           AllUnformattedAns += item.pageContent;
         });
 
-        const PROMPT = `Generate an HTML-formatted answer for: ${spokenText}\nContent: ${AllUnformattedAns}`;
+        const PROMPT = `Generate an  answer for: ${spokenText}\nContent: ${AllUnformattedAns}`;
         const AiModelResult = await chatSession.sendMessage(PROMPT);
+        // console.log("AiModelResult", AiModelResult);
         const FinalAns = AiModelResult.response
           .text()
           .replace(/```/g, "")
@@ -161,17 +184,19 @@ Answer content: ${AllUnformattedAns}
         editor.commands.setContent(
           AllText + "<p><strong>Answer: </strong>" + FinalAns + "</p>"
         );
-        const text = stripHTML(await AiModelResult.response.text()); 
+        const rawhtml=await AiModelResult.response.text()
+        console.log("rawhtml",rawhtml)
+        // const text = stripHTML(rawhtml); 
  try {
      await fetch('/api/text_to_speech', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
   },
-  body:JSON.stringify({ text: text }),
+  body:JSON.stringify({text:rawhtml }),
 });
-const audio = new Audio('/voice.mp3');
-audio.play();
+// const audio = new Audio(`/voice.mp3?ts=${Date.now()}`);
+// audio.play();
     } catch (err) {
       console.error('Error:', err);}
 
@@ -360,6 +385,25 @@ audio.play();
               label="Download"
               className="text-green-600 hover:bg-green-50"
             />
+             <>
+      {!isPlaying && (
+        <ToolButton
+          onClick={handlePlay}
+          icon={Play}
+          label="Play"
+          className="text-blue-600 hover:bg-blue-50"
+        />
+      )}
+
+      {isPlaying && (
+        <ToolButton
+          onClick={handlePause}
+          icon={Pause}
+          label="Pause"
+          className="text-red-600 hover:bg-red-50"
+        />
+      )}
+    </>
           </div>
         </div>
       </div>
