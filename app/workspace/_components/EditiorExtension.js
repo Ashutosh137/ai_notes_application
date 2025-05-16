@@ -241,6 +241,24 @@ Answer content: ${AllUnformattedAns}
         editor.commands.setContent(
           AllText + "<p><strong>Answer: </strong>" + FinalAns + "</p>"
         );
+        const newUtterance = new SpeechSynthesisUtterance(AllText);
+        setUtterance(newUtterance);
+
+        newUtterance.onend = () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setRemainingText("");
+        };
+
+        newUtterance.onerror = () => {
+          setIsPlaying(false);
+          setIsPaused(false);
+          setRemainingText("");
+        };
+
+        speechSynthesis.speak(newUtterance);
+        setIsPlaying(true);
+        setIsPaused(false);
 
         saveNotes({
           notes: editor.getHTML(),
