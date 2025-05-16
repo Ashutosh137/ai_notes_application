@@ -42,14 +42,14 @@ function EditorExtension({ editor }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
 
-  const handlePlay = () => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio(`/voice.mp3?ts=${Date.now()}`);
-      audioRef.current.onended = () => setIsPlaying(false); // Reset when audio ends
-    }
-    audioRef.current.play();
-    setIsPlaying(true);
-  };
+  // const handlePlay = () => {
+  //   if (!audioRef.current) {
+  //     audioRef.current = new Audio(`/voice.mp3?ts=${Date.now()}`);
+  //     audioRef.current.onended = () => setIsPlaying(false); // Reset when audio ends
+  //   }
+  //   audioRef.current.play();
+  //   setIsPlaying(true);
+  // };
 
   const handlePause = () => {
     if (audioRef.current) {
@@ -57,6 +57,20 @@ function EditorExtension({ editor }) {
       setIsPlaying(false);
     }
   }
+  const handlePlay = () => {
+  if (audioRef.current) {
+    audioRef.current.pause(); // Stop any existing playback
+    audioRef.current = null;
+  }
+
+  // Always create a new Audio instance
+  const audio = new Audio(`/voice.mp3?ts=${Date.now()}`);
+  audio.onended = () => setIsPlaying(false); // Reset when audio ends
+  audio.play();
+  audioRef.current = audio;
+
+  setIsPlaying(true);
+};
 
 
   const onAiClick = async () => {
@@ -172,7 +186,7 @@ function stripHTML(html) {
           AllUnformattedAns += item.pageContent;
         });
 
-        const PROMPT = `Generate an  answer for: ${spokenText}\nContent: ${AllUnformattedAns}`;
+        const PROMPT = `Generate an   answer for: ${spokenText}\nContent: ${AllUnformattedAns} please don'y give me answer in html`;
         const AiModelResult = await chatSession.sendMessage(PROMPT);
         // console.log("AiModelResult", AiModelResult);
         const FinalAns = AiModelResult.response
