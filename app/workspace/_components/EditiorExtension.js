@@ -53,7 +53,9 @@ function EditorExtension({ editor }) {
     );
 
     if (!selectedText) {
-      toast.error("Please select text to speak");
+        
+
+      // toast.error("Please select text to speak");
       return;
     }
 
