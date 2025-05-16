@@ -51,79 +51,50 @@ function EditorExtension({ editor }) {
       editor.state.selection.to,
       " "
     );
-
+  
     if (!selectedText) {
-
-
-      // toast.error("Please select text to speak");
+      toast.error("Please select text to speak");
       return;
     }
-
+  
     if (!window.speechSynthesis) {
       toast.error("Text-to-speech not supported in your browser");
       return;
     }
-
-    if (remainingText) {
-      handleResume();
-      return;
-    }
-
+  
+    // Cancel any previous speech
     speechSynthesis.cancel();
+  
     const newUtterance = new SpeechSynthesisUtterance(selectedText);
-    setUtterance(newUtterance);
-
     newUtterance.onend = () => {
       setIsPlaying(false);
       setIsPaused(false);
-      setRemainingText("");
     };
-
     newUtterance.onerror = () => {
       setIsPlaying(false);
       setIsPaused(false);
-      setRemainingText("");
     };
-
+  
     speechSynthesis.speak(newUtterance);
+    setUtterance(newUtterance);
     setIsPlaying(true);
     setIsPaused(false);
   };
-
+  
   const handlePause = () => {
-    if (window.speechSynthesis) {
-      try {
-        speechSynthesis.pause();
-        setIsPaused(true);
-        setIsPlaying(false);
-      } catch (e) {
-        if (utterance) {
-          speechSynthesis.cancel();
-          const charIndex = utterance.charIndex || 0;
-          setRemainingText(utterance.text.slice(charIndex));
-          setIsPaused(true);
-          setIsPlaying(false);
-        }
-      }
+    if (speechSynthesis.speaking && !speechSynthesis.paused) {
+      speechSynthesis.pause();
+      setIsPlaying(false);
+      setIsPaused(true);
     }
   };
-
+  
   const handleResume = () => {
-    if (!remainingText) return;
-
-    const newUtterance = new SpeechSynthesisUtterance(remainingText);
-    setUtterance(newUtterance);
-
-    newUtterance.onend = () => {
-      setIsPlaying(false);
+    if (speechSynthesis.paused) {
+      speechSynthesis.resume();
+      setIsPlaying(true);
       setIsPaused(false);
-      setRemainingText("");
-    };
-
-    speechSynthesis.speak(newUtterance);
-    setRemainingText("");
-    setIsPlaying(true);
-    setIsPaused(false);
+    }
   };
 
   const handleStop = () => {
