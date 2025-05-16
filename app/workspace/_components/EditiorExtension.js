@@ -53,7 +53,7 @@ function EditorExtension({ editor }) {
     );
 
     if (!selectedText) {
-        
+
 
       // toast.error("Please select text to speak");
       return;
@@ -243,7 +243,7 @@ Answer content: ${AllUnformattedAns}
         editor.commands.setContent(
           AllText + "<p><strong>Answer: </strong>" + FinalAns + "</p>"
         );
-        const newUtterance = new SpeechSynthesisUtterance(AllText);
+        const newUtterance = new SpeechSynthesisUtterance(FinalAns);
         setUtterance(newUtterance);
 
         newUtterance.onend = () => {
