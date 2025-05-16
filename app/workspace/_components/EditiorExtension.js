@@ -22,15 +22,15 @@ import {
   TextQuote,
   Underline,
   Play,
-  Pause
+  Pause,
+  Square,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useContext, useEffect, useState,useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { saveAs } from "file-saver";
 import htmlDocx from "html-docx-js/dist/html-docx";
 import { FileSaveContext } from "../../../app/_context/FileSaveContext";
-
 
 function EditorExtension({ editor }) {
   const { fileId } = useParams();
@@ -40,38 +40,98 @@ function EditorExtension({ editor }) {
   const { fileSave, setFileSave } = useContext(FileSaveContext);
   const [isListening, setIsListening] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [utterance, setUtterance] = useState(null);
+  const [remainingText, setRemainingText] = useState("");
 
-  // const handlePlay = () => {
-  //   if (!audioRef.current) {
-  //     audioRef.current = new Audio(`/voice.mp3?ts=${Date.now()}`);
-  //     audioRef.current.onended = () => setIsPlaying(false); // Reset when audio ends
-  //   }
-  //   audioRef.current.play();
-  //   setIsPlaying(true);
-  // };
+  // Text-to-Speech Functions
+  const handlePlay = () => {
+    const selectedText = editor.state.doc.textBetween(
+      editor.state.selection.from,
+      editor.state.selection.to,
+      " "
+    );
+
+    if (!selectedText) {
+      toast.error("Please select text to speak");
+      return;
+    }
+
+    if (!window.speechSynthesis) {
+      toast.error("Text-to-speech not supported in your browser");
+      return;
+    }
+
+    if (remainingText) {
+      handleResume();
+      return;
+    }
+
+    speechSynthesis.cancel();
+    const newUtterance = new SpeechSynthesisUtterance(selectedText);
+    setUtterance(newUtterance);
+
+    newUtterance.onend = () => {
+      setIsPlaying(false);
+      setIsPaused(false);
+      setRemainingText("");
+    };
+
+    newUtterance.onerror = () => {
+      setIsPlaying(false);
+      setIsPaused(false);
+      setRemainingText("");
+    };
+
+    speechSynthesis.speak(newUtterance);
+    setIsPlaying(true);
+    setIsPaused(false);
+  };
 
   const handlePause = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+    if (window.speechSynthesis) {
+      try {
+        speechSynthesis.pause();
+        setIsPaused(true);
+        setIsPlaying(false);
+      } catch (e) {
+        if (utterance) {
+          speechSynthesis.cancel();
+          const charIndex = utterance.charIndex || 0;
+          setRemainingText(utterance.text.slice(charIndex));
+          setIsPaused(true);
+          setIsPlaying(false);
+        }
+      }
     }
-  }
-  const handlePlay = () => {
-  if (audioRef.current) {
-    audioRef.current.pause(); // Stop any existing playback
-    audioRef.current = null;
-  }
+  };
 
-  // Always create a new Audio instance
-  const audio = new Audio(`/voice.mp3?ts=${Date.now()}`);
-  audio.onended = () => setIsPlaying(false); // Reset when audio ends
-  audio.play();
-  audioRef.current = audio;
+  const handleResume = () => {
+    if (!remainingText) return;
 
-  setIsPlaying(true);
-};
+    const newUtterance = new SpeechSynthesisUtterance(remainingText);
+    setUtterance(newUtterance);
 
+    newUtterance.onend = () => {
+      setIsPlaying(false);
+      setIsPaused(false);
+      setRemainingText("");
+    };
+
+    speechSynthesis.speak(newUtterance);
+    setRemainingText("");
+    setIsPlaying(true);
+    setIsPaused(false);
+  };
+
+  const handleStop = () => {
+    if (window.speechSynthesis) {
+      speechSynthesis.cancel();
+      setIsPlaying(false);
+      setIsPaused(false);
+      setRemainingText("");
+    }
+  };
 
   const onAiClick = async () => {
     toast("AI is getting your answer...");
@@ -127,11 +187,6 @@ Answer content: ${AllUnformattedAns}
       console.error(error);
     }
   };
-function stripHTML(html) {
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  return div.textContent || div.innerText || "";
-}
 
   const download = () => {
     const htmlString = `
@@ -144,17 +199,6 @@ function stripHTML(html) {
     const converted = htmlDocx.asBlob(htmlString);
     saveAs(converted, "document.docx");
   };
-
-  useEffect(() => {
-    if (fileSave) {
-      saveNotes({
-        notes: editor.getHTML(),
-        fileId: fileId,
-        createdBy: user?.primaryEmailAddress?.emailAddress,
-      });
-      toast("File Saved");
-    }
-  }, [fileSave]);
 
   const handleVoiceInput = () => {
     const SpeechRecognition =
@@ -186,9 +230,8 @@ function stripHTML(html) {
           AllUnformattedAns += item.pageContent;
         });
 
-        const PROMPT = `Generate an   answer for: ${spokenText}\nContent: ${AllUnformattedAns} please don'y give me answer in html`;
+        const PROMPT = `Generate an answer for: ${spokenText}\nContent: ${AllUnformattedAns}`;
         const AiModelResult = await chatSession.sendMessage(PROMPT);
-        // console.log("AiModelResult", AiModelResult);
         const FinalAns = AiModelResult.response
           .text()
           .replace(/```/g, "")
@@ -198,21 +241,6 @@ function stripHTML(html) {
         editor.commands.setContent(
           AllText + "<p><strong>Answer: </strong>" + FinalAns + "</p>"
         );
-        const rawhtml=await AiModelResult.response.text()
-        console.log("rawhtml",rawhtml)
-        // const text = stripHTML(rawhtml); 
- try {
-     await fetch('/api/text_to_speech', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body:JSON.stringify({text:rawhtml }),
-});
-// const audio = new Audio(`/voice.mp3?ts=${Date.now()}`);
-// audio.play();
-    } catch (err) {
-      console.error('Error:', err);}
 
         saveNotes({
           notes: editor.getHTML(),
@@ -243,15 +271,31 @@ function stripHTML(html) {
     recognition.start();
   };
 
-  const ToolButton = ({ onClick, active, icon: Icon, label, ...props }) => (
+  useEffect(() => {
+    if (fileSave) {
+      saveNotes({
+        notes: editor.getHTML(),
+        fileId: fileId,
+        createdBy: user?.primaryEmailAddress?.emailAddress,
+      });
+      toast("File Saved");
+    }
+  }, [fileSave]);
+
+  const ToolButton = ({
+    onClick,
+    active,
+    icon: Icon,
+    label,
+    className = "",
+  }) => (
     <button
       onClick={onClick}
       className={`p-2 rounded-md hover:bg-gray-100 transition-colors ${
         active ? "text-blue-600 bg-blue-50" : "text-gray-600"
-      }`}
+      } ${className}`}
       aria-label={label}
       title={label}
-      {...props}
     >
       <Icon className="w-5 h-5" />
     </button>
@@ -290,7 +334,7 @@ function stripHTML(html) {
               label="Strikethrough"
             />
             <ToolButton
-              onClick={() => editor.chain().focus()?.toggleHighlight().run()}
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
               active={editor.isActive("highlight")}
               icon={Highlighter}
               label="Highlight"
@@ -380,7 +424,7 @@ function stripHTML(html) {
           <ToolDivider />
 
           {/* AI & Actions */}
-          <div className="flex items-center gap-4 px-2">
+          <div className="flex items-center gap-1">
             <ToolButton
               onClick={onAiClick}
               icon={Sparkles}
@@ -391,7 +435,7 @@ function stripHTML(html) {
               onClick={handleVoiceInput}
               icon={Mic}
               label="Voice Input"
-              className={`${isListening ? "text-red-600 animate-pulse" : "text-gray-600"} hover:bg-gray-100`}
+              className={`${isListening ? "text-red-600 animate-pulse" : "text-gray-600"}`}
             />
             <ToolButton
               onClick={download}
@@ -399,25 +443,40 @@ function stripHTML(html) {
               label="Download"
               className="text-green-600 hover:bg-green-50"
             />
-             <>
-      {!isPlaying && (
-        <ToolButton
-          onClick={handlePlay}
-          icon={Play}
-          label="Play"
-          className="text-blue-600 hover:bg-blue-50"
-        />
-      )}
 
-      {isPlaying && (
-        <ToolButton
-          onClick={handlePause}
-          icon={Pause}
-          label="Pause"
-          className="text-red-600 hover:bg-red-50"
-        />
-      )}
-    </>
+            {/* Text-to-Speech Controls */}
+            {!isPlaying && !isPaused && (
+              <ToolButton
+                onClick={handlePlay}
+                icon={Play}
+                label="Play"
+                className="text-blue-600 hover:bg-blue-50"
+              />
+            )}
+            {isPlaying && (
+              <ToolButton
+                onClick={handlePause}
+                icon={Pause}
+                label="Pause"
+                className="text-yellow-600 hover:bg-yellow-50"
+              />
+            )}
+            {isPaused && (
+              <ToolButton
+                onClick={handleResume}
+                icon={Play}
+                label="Resume"
+                className="text-green-600 hover:bg-green-50"
+              />
+            )}
+            {(isPlaying || isPaused) && (
+              <ToolButton
+                onClick={handleStop}
+                icon={Square}
+                label="Stop"
+                className="text-red-600 hover:bg-red-50"
+              />
+            )}
           </div>
         </div>
       </div>
